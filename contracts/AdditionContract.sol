@@ -2,14 +2,11 @@
 pragma solidity ^0.8.0;
 
 contract AdditionContract {
-    uint public a = 5;
-    uint public b = 3;
+    event AdditionDone(uint x, uint y, uint result);
 
-    function addition1() public view returns (uint) {
-        return a + b;
-    }
-
-    function addition2(uint x, uint y) public pure returns (uint) {
-        return x + y;
+    function addition2(uint x, uint y) public returns (uint) {
+        uint res = x + y;
+        emit AdditionDone(x, y, res);
+        return res;
     }
 }

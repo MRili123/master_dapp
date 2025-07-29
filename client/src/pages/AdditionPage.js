@@ -133,28 +133,35 @@ function AdditionPage() {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!contract || accounts.length === 0) {
-      alert("Le contrat AdditionContract n’est pas chargé ou aucun compte n'est connecté.");
-      return;
-    }
+  e.preventDefault();
+  if (!contract || accounts.length === 0) {
+    alert("Le contrat AdditionContract n’est pas chargé ou aucun compte n'est connecté.");
+    return;
+  }
 
-    try {
-      const receipt = await contract.methods
-        .addition2(parseInt(a), parseInt(b))
-        .send({ from: accounts[0] });
+  try {
+    const receipt = await contract.methods
+      .addition2(parseInt(a), parseInt(b))
+      .send({ from: accounts[0] });
 
-      setResult("Transaction envoyée avec succès.");
-      const txDetails = await web3.eth.getTransaction(receipt.transactionHash);
-      setTransaction(txDetails);
+    // Get result from emitted event
+    const event = receipt.events.AdditionDone;
+    const sum = event.returnValues.result;
+    setResult(`Le résultat est : ${sum}`);
 
-      const block = await web3.eth.getBlock(receipt.blockNumber);
-      setLatestBlock(block);
-    } catch (err) {
-      setError("Erreur lors de l’exécution: " + (err.message || err));
-      console.error("Erreur lors de l’exécution:", err);
-    }
-  };
+    // Fetch transaction details
+    const txDetails = await web3.eth.getTransaction(receipt.transactionHash);
+    setTransaction(txDetails);
+
+    // Fetch block details
+    const block = await web3.eth.getBlock(receipt.blockNumber);
+    setLatestBlock(block);
+  } catch (err) {
+    setError("Erreur lors de l’exécution: " + (err.message || err));
+    console.error("Erreur lors de l’exécution:", err);
+  }
+};
+
 
   const blockTimestamp = latestBlock?.timestamp
     ? new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()

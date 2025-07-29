@@ -1,289 +1,341 @@
-import React, { useState, useEffect } from 'react';
-import Web3 from 'web3';
-import SommeTableauJSON from '../contracts/SommeTableau.json';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import Web3 from "web3";
+import SommeTableauJSON from "../contracts/SommeTableau.json";
+import { Link } from "react-router-dom";
 
-// Simple professional styles
 const styles = {
-    container: {
-        maxWidth: '540px',
-        margin: '40px auto',
-        background: '#fff',
-        borderRadius: '12px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-        padding: '32px',
-        fontFamily: 'Segoe UI, Arial, sans-serif',
-    },
-    title: {
-        textAlign: 'center',
-        color: '#2d3748',
-        marginBottom: '28px',
-        fontWeight: 700,
-        fontSize: '2rem',
-        letterSpacing: '0.5px',
-    },
-    form: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        marginBottom: '24px',
-        background: '#f7fafc',
-        padding: '18px 16px',
-        borderRadius: '8px',
-        border: '1px solid #e2e8f0',
-    },
-    label: {
-        fontWeight: 500,
-        color: '#4a5568',
-        marginBottom: '4px',
-    },
-    input: {
-        padding: '8px 10px',
-        border: '1px solid #cbd5e1',
-        borderRadius: '5px',
-        fontSize: '1rem',
-        outline: 'none',
-        marginBottom: '8px',
-    },
-    button: {
-        background: 'linear-gradient(90deg, #667eea 0%, #5a67d8 100%)',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '5px',
-        padding: '10px 0',
-        fontWeight: 600,
-        fontSize: '1rem',
-        cursor: 'pointer',
-        marginTop: '4px',
-        transition: 'background 0.2s',
-    },
-    section: {
-        marginBottom: '24px',
-        padding: '16px',
-        background: '#f7fafc',
-        borderRadius: '8px',
-        border: '1px solid #e2e8f0',
-    },
-    infoTitle: {
-        color: '#2b6cb0',
-        fontWeight: 600,
-        marginBottom: '8px',
-        fontSize: '1.1rem',
-    },
-    infoText: {
-        color: '#2d3748',
-        marginBottom: '4px',
-        fontSize: '1rem',
-    },
-    txSection: {
-        background: '#e6fffa',
-        border: '1px solid #b2f5ea',
-        borderRadius: '8px',
-        padding: '14px',
-        marginBottom: '18px',
-    },
-    link: {
-        display: 'inline-block',
-        marginTop: '18px',
-        color: '#5a67d8',
-        textDecoration: 'none',
-        fontWeight: 500,
-        fontSize: '1rem',
-        transition: 'color 0.2s',
-    },
-    result: {
-        color: '#38a169',
-        fontWeight: 500,
-        marginTop: '4px',
-        marginBottom: '0',
-    },
-    error: {
-        color: '#e53e3e',
-        fontWeight: 500,
-        marginTop: '4px',
-        marginBottom: '0',
-    },
+  container: {
+    maxWidth: "540px",
+    margin: "40px auto",
+    padding: "32px",
+    background: "#fff",
+    borderRadius: "14px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
+    fontFamily: "Segoe UI, Arial, sans-serif",
+  },
+  heading: {
+    textAlign: "center",
+    fontSize: "1.8rem",
+    color: "#1a237e",
+    marginBottom: "24px",
+    fontWeight: 700,
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+  label: {
+    fontWeight: 600,
+    color: "#333",
+  },
+  input: {
+    padding: "8px 10px",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    fontSize: "1rem",
+    width: "100px",
+    marginRight: "12px",
+  },
+  button: {
+    background: "#3949ab",
+    color: "#fff",
+    padding: "10px 18px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "1rem",
+    transition: "background 0.2s",
+  },
+  section: {
+    background: "#f4f6f8",
+    borderRadius: "10px",
+    padding: "16px",
+    marginTop: "20px",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+  },
+  sectionTitle: {
+    fontSize: "1.2rem",
+    fontWeight: 600,
+    color: "#1976d2",
+    marginBottom: "10px",
+  },
+  info: {
+    margin: "4px 0",
+    fontSize: "0.95rem",
+    color: "#222",
+    wordBreak: "break-word",
+  },
+  link: {
+    display: "block",
+    marginTop: "28px",
+    textAlign: "center",
+    color: "#1976d2",
+    fontWeight: 600,
+    textDecoration: "none",
+  },
 };
 
 function SommeTableauPage() {
-    const [web3, setWeb3] = useState(null);
-    const [contract, setContract] = useState(null);
-    const [accounts, setAccounts] = useState([]);
-    const [nombre, setNombre] = useState('');
-    const [ajoutResult, setAjoutResult] = useState('');
-    const [index, setIndex] = useState('');
-    const [element, setElement] = useState('');
-    const [tableau, setTableau] = useState([]);
-    const [somme, setSomme] = useState('');
-    const [txHash, setTxHash] = useState('');
-    const [gasUsed, setGasUsed] = useState('');
-    const [latestBlock, setLatestBlock] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [nombre, setNombre] = useState("");
+  const [ajoutResult, setAjoutResult] = useState("");
+  const [index, setIndex] = useState("");
+  const [element, setElement] = useState("");
+  const [tableau, setTableau] = useState([]);
+  const [somme, setSomme] = useState("");
+  const [transaction, setTransaction] = useState(null);
+  const [latestBlock, setLatestBlock] = useState(null);
+  const [error, setError] = useState("");
 
-    useEffect(() => {
-        const init = async () => {
-            let web3;
-            let accounts;
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                accounts = await web3.eth.getAccounts();
-            } else {
-                web3 = new Web3('http://localhost:7545');
-                accounts = await web3.eth.getAccounts();
-            }
-            setWeb3(web3);
-            setAccounts(accounts);
-            const networkId = await web3.eth.net.getId();
-            const deployedNetwork = SommeTableauJSON.networks[networkId];
-            if (deployedNetwork) {
-                const contract = new web3.eth.Contract(
-                    SommeTableauJSON.abi,
-                    deployedNetwork.address
-                );
-                setContract(contract);
-                const block = await web3.eth.getBlock('latest');
-                setLatestBlock(block.number);
-            } else {
-                alert('SommeTableau contract is not deployed on this network.');
-            }
-        };
-        init();
-    }, []);
-
-    const handleAjouterNombre = async (e) => {
-        e.preventDefault();
-        try {
-            const receipt = await contract.methods.ajouterNombre(nombre).send({ from: accounts[0] });
-            setAjoutResult('Nombre ajouté avec succès');
-            setTxHash(receipt.transactionHash);
-            setGasUsed(receipt.gasUsed);
-            setNombre('');
-            const block = await web3.eth.getBlock('latest');
-            setLatestBlock(block.number);
-        } catch (err) {
-            console.error(err);
-            setAjoutResult('Erreur lors de l\'ajout');
+  useEffect(() => {
+    const init = async () => {
+      try {
+        let web3Instance;
+        if (window.ethereum) {
+          web3Instance = new Web3(window.ethereum);
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+        } else {
+          web3Instance = new Web3("http://localhost:7545");
         }
+
+        const userAccounts = await web3Instance.eth.getAccounts();
+        setWeb3(web3Instance);
+        setAccounts(userAccounts);
+
+        const networkId = await web3Instance.eth.net.getId();
+        const deployedNetwork = SommeTableauJSON.networks[networkId];
+
+        if (deployedNetwork) {
+          const instance = new web3Instance.eth.Contract(
+            SommeTableauJSON.abi,
+            deployedNetwork.address
+          );
+          setContract(instance);
+
+          const block = await web3Instance.eth.getBlock("latest");
+          setLatestBlock(block);
+        } else {
+          setError("Le contrat SommeTableau n'est pas déployé sur ce réseau.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Erreur d'initialisation : " + err.message);
+      }
     };
 
-    const handleGetElement = async (e) => {
-        e.preventDefault();
-        try {
-            const result = await contract.methods.getElement(index).call();
-            setElement(result);
-            setTxHash('Appel en lecture (call)');
-            setGasUsed('-');
-            const block = await web3.eth.getBlock('latest');
-            setLatestBlock(block.number);
-        } catch (err) {
-            console.error(err);
-            setElement('Erreur lors de la récupération');
-        }
-    };
+    init();
+  }, []);
 
-    const handleAfficheTableau = async () => {
-        try {
-            const result = await contract.methods.afficheTableau().call();
-            setTableau(result);
-            setTxHash('Appel en lecture (call)');
-            setGasUsed('-');
-            const block = await web3.eth.getBlock('latest');
-            setLatestBlock(block.number);
-        } catch (err) {
-            console.error(err);
-            setTableau([]);
-        }
-    };
+  const handleAjouterNombre = async (e) => {
+    e.preventDefault();
+    try {
+      const receipt = await contract.methods
+        .ajouterNombre(nombre)
+        .send({ from: accounts[0] });
 
-    const handleCalculerSomme = async () => {
-        try {
-            const result = await contract.methods.calculerSomme().call();
-            setSomme(result);
-            setTxHash('Appel en lecture (call)');
-            setGasUsed('-');
-            const block = await web3.eth.getBlock('latest');
-            setLatestBlock(block.number);
-        } catch (err) {
-            console.error(err);
-            setSomme('Erreur');
-        }
-    };
+      const tx = await web3.eth.getTransaction(receipt.transactionHash);
+      const block = await web3.eth.getBlock(receipt.blockNumber);
 
-    return (
-        <div style={styles.container}>
-            <h2 style={styles.title}>Exercice 6 : Somme Tableau</h2>
-            {/* Ajouter un nombre */}
-            <form onSubmit={handleAjouterNombre} style={styles.form}>
-                <label style={styles.label}>
-                    Nombre à ajouter :
-                    <input
-                        type="number"
-                        value={nombre}
-                        onChange={(e) => setNombre(e.target.value)}
-                        required
-                        style={styles.input}
-                    />
-                </label>
-                <button type="submit" style={styles.button}>Ajouter</button>
-                {ajoutResult && (
-                    <p style={ajoutResult.startsWith('Erreur') ? styles.error : styles.result}>
-                        {ajoutResult}
-                    </p>
-                )}
-            </form>
-            {/* Récupérer un élément */}
-            <form onSubmit={handleGetElement} style={styles.form}>
-                <label style={styles.label}>
-                    Index de l'élément :
-                    <input
-                        type="number"
-                        value={index}
-                        onChange={(e) => setIndex(e.target.value)}
-                        required
-                        style={styles.input}
-                    />
-                </label>
-                <button type="submit" style={styles.button}>Obtenir l'élément</button>
-                {element && (
-                    <p style={element.startsWith('Erreur') ? styles.error : styles.result}>
-                        Élément : {element}
-                    </p>
-                )}
-            </form>
-            {/* Afficher le tableau */}
-            <div style={styles.section}>
-                <button onClick={handleAfficheTableau} style={styles.button}>Afficher le tableau</button>
-                {tableau.length > 0 && (
-                    <p style={styles.infoText}>Tableau : [{tableau.join(', ')}]</p>
-                )}
-            </div>
-            {/* Calculer la somme */}
-            <div style={styles.section}>
-                <button onClick={handleCalculerSomme} style={styles.button}>Calculer la somme</button>
-                {somme && (
-                    <p style={somme === 'Erreur' ? styles.error : styles.result}>
-                        Somme : {somme}
-                    </p>
-                )}
-            </div>
-            {/* Infos Blockchain */}
-            <div style={styles.section}>
-                <div style={styles.infoTitle}>Infos Blockchain</div>
-                <p style={styles.infoText}>Compte connecté : {accounts[0]}</p>
-                <p style={styles.infoText}>Dernier bloc : {latestBlock}</p>
-            </div>
-            {/* Infos transaction */}
-            {txHash && (
-                <div style={styles.txSection}>
-                    <div style={styles.infoTitle}>Détails de la dernière transaction</div>
-                    <p style={styles.infoText}>Transaction Hash : {txHash}</p>
-                    <p style={styles.infoText}>Gas utilisé : {gasUsed}</p>
-                </div>
-            )}
-            {/* Lien vers sommaire */}
-            <Link to="/" style={styles.link}>← Retour au sommaire</Link>
+      setTransaction(tx);
+      setLatestBlock(block);
+
+      setAjoutResult("Nombre ajouté avec succès");
+      setNombre("");
+    } catch (err) {
+      console.error(err);
+      setAjoutResult("Erreur lors de l'ajout");
+    }
+  };
+
+  const handleGetElement = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await contract.methods.getElement(index).call();
+      setElement(result);
+
+      const block = await web3.eth.getBlock("latest");
+      setLatestBlock(block);
+      setTransaction(null);
+    } catch (err) {
+      console.error(err);
+      setElement("Erreur lors de la récupération");
+    }
+  };
+
+  const handleAfficheTableau = async () => {
+    try {
+      const result = await contract.methods.afficheTableau().call();
+      setTableau(result);
+
+      const block = await web3.eth.getBlock("latest");
+      setLatestBlock(block);
+      setTransaction(null);
+    } catch (err) {
+      console.error(err);
+      setTableau([]);
+    }
+  };
+
+  const handleCalculerSomme = async () => {
+    try {
+      const result = await contract.methods.calculerSomme().call();
+      setSomme(result);
+
+      const block = await web3.eth.getBlock("latest");
+      setLatestBlock(block);
+      setTransaction(null);
+    } catch (err) {
+      console.error(err);
+      setSomme("Erreur");
+    }
+  };
+
+  const blockTimestamp = latestBlock?.timestamp
+    ? new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()
+    : "Non disponible";
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.heading}>Exercice 6 : Somme Tableau</div>
+
+      <form style={styles.form} onSubmit={handleAjouterNombre}>
+        <label style={styles.label}>
+          Nombre à ajouter:
+          <input
+            type="number"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            style={styles.input}
+            required
+          />
+        </label>
+        <button type="submit" style={styles.button}>
+          Ajouter
+        </button>
+        {ajoutResult && <p style={ajoutResult.startsWith("Erreur") ? { color: "#e53e3e", marginTop: 4 } : { color: "#38a169", marginTop: 4 }}>{ajoutResult}</p>}
+      </form>
+
+      <form style={styles.form} onSubmit={handleGetElement}>
+        <label style={styles.label}>
+          Index de l'élément:
+          <input
+            type="number"
+            value={index}
+            onChange={(e) => setIndex(e.target.value)}
+            style={styles.input}
+            required
+          />
+        </label>
+        <button type="submit" style={styles.button}>
+          Obtenir l'élément
+        </button>
+        {element !== "" && (
+  <p
+    style={
+      typeof element === "string" && element.startsWith("Erreur")
+        ? { color: "#e53e3e", marginTop: 4 }
+        : { color: "#38a169", marginTop: 4 }
+    }
+  >
+    Élément : {element.toString()}
+  </p>
+)}
+
+      </form>
+
+      <div style={styles.section}>
+        <button onClick={handleAfficheTableau} style={styles.button}>
+          Afficher le tableau
+        </button>
+        {tableau.length > 0 && <p style={styles.info}>Tableau : [{tableau.join(", ")}]</p>}
+      </div>
+
+      <div style={styles.section}>
+        <button onClick={handleCalculerSomme} style={styles.button}>
+          Calculer la somme
+        </button>
+        {somme && <p style={somme === "Erreur" ? { color: "#e53e3e", marginTop: 4 } : { color: "#38a169", marginTop: 4 }}>{`Somme : ${somme}`}</p>}
+      </div>
+
+      {latestBlock && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Informations du bloc</div>
+          <p style={styles.info}>
+            <strong>Numéro du bloc:</strong> {latestBlock.number}
+          </p>
+          <p style={styles.info}>
+            <strong>Hash:</strong> {latestBlock.hash}
+          </p>
+          <p style={styles.info}>
+            <strong>Timestamp:</strong> {blockTimestamp}
+          </p>
+          <p style={styles.info}>
+            <strong>Parent Hash:</strong> {latestBlock.parentHash}
+          </p>
+          <p style={styles.info}>
+            <strong>Nonce:</strong> {latestBlock.nonce}
+          </p>
+          <p style={styles.info}>
+            <strong>Transaction Count:</strong> {latestBlock.transactions.length}
+          </p>
+          <p style={styles.info}>
+            <strong>Miner:</strong> {latestBlock.miner}
+          </p>
+          <p style={styles.info}>
+            <strong>Gas Limit:</strong> {latestBlock.gasLimit}
+          </p>
+          <p style={styles.info}>
+            <strong>Gas Used:</strong> {latestBlock.gasUsed}
+          </p>
+          <p style={styles.info}>
+            <strong>Size:</strong> {latestBlock.size}
+          </p>
         </div>
-    );
+      )}
+
+      {transaction && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Détails de la transaction</div>
+          <p style={styles.info}>
+            <strong>Hash:</strong> {transaction.hash}
+          </p>
+          <p style={styles.info}>
+            <strong>Bloc:</strong> {transaction.blockNumber}
+          </p>
+          <p style={styles.info}>
+            <strong>Expéditeur:</strong> {transaction.from}
+          </p>
+          <p style={styles.info}>
+            <strong>Destinataire:</strong> {transaction.to}
+          </p>
+          <p style={styles.info}>
+            <strong>Montant:</strong> {web3.utils.fromWei(transaction.value, "ether")} ETH
+          </p>
+          <p style={styles.info}>
+            <strong>Nonce:</strong> {transaction.nonce}
+          </p>
+          <p style={styles.info}>
+            <strong>Gas utilisé:</strong> {transaction.gas}
+          </p>
+          <p style={styles.info}>
+            <strong>Prix du Gas:</strong> {web3.utils.fromWei(transaction.gasPrice, "gwei")} Gwei
+          </p>
+          <p style={styles.info}>
+            <strong>Nom du contrat:</strong> SommeTableau
+          </p>
+        </div>
+      )}
+
+      <Link to="/" style={styles.link}>
+        ← Retour au sommaire
+      </Link>
+    </div>
+  );
 }
 
 export default SommeTableauPage;

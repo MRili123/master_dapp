@@ -1,212 +1,284 @@
-import React, { useState, useEffect } from 'react';
-import Web3 from 'web3';
-import VerificateurPositifJSON from '../contracts/VerificateurPositif.json';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import Web3 from "web3";
+import VerificateurPositifJSON from "../contracts/VerificateurPositif.json";
+import { Link } from "react-router-dom";
+
+const styles = {
+  container: {
+    maxWidth: "480px",
+    margin: "40px auto",
+    padding: "32px",
+    background: "#fff",
+    borderRadius: "14px",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
+    fontFamily: "Segoe UI, Arial, sans-serif",
+  },
+  heading: {
+    color: "#1a237e",
+    marginBottom: "24px",
+    fontWeight: 700,
+    fontSize: "1.5rem",
+    letterSpacing: "0.5px",
+    textAlign: "center",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+    marginBottom: "28px",
+  },
+  label: {
+    fontWeight: 500,
+    color: "#333",
+    marginBottom: "6px",
+  },
+  input: {
+    padding: "10px 12px",
+    border: "1px solid #bdbdbd",
+    borderRadius: "6px",
+    fontSize: "1rem",
+    outline: "none",
+    transition: "border 0.2s",
+  },
+  button: {
+    background: "linear-gradient(90deg,#3949ab 0,#1976d2 100%)",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    padding: "12px",
+    fontWeight: 600,
+    fontSize: "1rem",
+    cursor: "pointer",
+    marginTop: "8px",
+    transition: "background 0.2s",
+  },
+  section: {
+    background: "#f5f7fa",
+    borderRadius: "8px",
+    padding: "16px",
+    marginBottom: "18px",
+    boxShadow: "0 1px 4px rgba(60,60,60,0.04)",
+    fontSize: "0.9rem",
+    lineHeight: "1.4",
+  },
+  sectionTitle: {
+    color: "#1976d2",
+    fontWeight: 600,
+    marginBottom: "8px",
+    fontSize: "1.1rem",
+  },
+  info: {
+    color: "#222",
+    fontSize: "1rem",
+    margin: "4px 0",
+    wordBreak: "break-word",
+  },
+  link: {
+    display: "inline-block",
+    marginTop: "18px",
+    color: "#1976d2",
+    textDecoration: "none",
+    fontWeight: 500,
+    fontSize: "1rem",
+    transition: "color 0.2s",
+  },
+};
 
 function VerificateurPositifPage() {
-    const [web3, setWeb3] = useState(null);
-    const [contract, setContract] = useState(null);
-    const [accounts, setAccounts] = useState([]);
-    const [nombre, setNombre] = useState('');
-    const [result, setResult] = useState('');
-    const [txHash, setTxHash] = useState('');
-    const [gasUsed, setGasUsed] = useState('');
-    const [latestBlock, setLatestBlock] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [nombre, setNombre] = useState("");
+  const [result, setResult] = useState("");
+  const [transaction, setTransaction] = useState(null);
+  const [latestBlock, setLatestBlock] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const init = async () => {
-            let web3;
-            let accounts;
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                accounts = await web3.eth.getAccounts();
-            } else {
-                web3 = new Web3('http://localhost:7545');
-                accounts = await web3.eth.getAccounts();
-            }
-            setWeb3(web3);
-            setAccounts(accounts);
-            const networkId = await web3.eth.net.getId();
-            const deployedNetwork = VerificateurPositifJSON.networks[networkId];
-            if (deployedNetwork) {
-                const contract = new web3.eth.Contract(
-                    VerificateurPositifJSON.abi,
-                    deployedNetwork.address
-                );
-                setContract(contract);
-                const block = await web3.eth.getBlock('latest');
-                setLatestBlock(block.number);
-            } else {
-                alert('VerificateurPositif contract is not deployed on this network.');
-            }
-        };
-        init();
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const result = await contract.methods.estPositif(nombre).call();
-            setResult(result ? 'Positif' : 'Négatif');
-            setTxHash('Appel en lecture (call)');
-            setGasUsed('-');
-            const block = await web3.eth.getBlock('latest');
-            setLatestBlock(block.number);
-        } catch (err) {
-            console.error(err);
-            alert('Erreur lors de la vérification du signe');
+  useEffect(() => {
+    const init = async () => {
+      try {
+        let web3Instance;
+        let accountsList;
+        if (window.ethereum) {
+          web3Instance = new Web3(window.ethereum);
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          accountsList = await web3Instance.eth.getAccounts();
+        } else {
+          web3Instance = new Web3("http://localhost:7545");
+          accountsList = await web3Instance.eth.getAccounts();
         }
-    };
 
-    return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-            fontFamily: 'Segoe UI, Arial, sans-serif',
-            padding: '40px 0'
-        }}>
-            <div style={{
-                maxWidth: 480,
-                margin: '0 auto',
-                background: '#fff',
-                borderRadius: 16,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-                padding: '32px 28px'
-            }}>
-                <h2 style={{
-                    textAlign: 'center',
-                    color: '#2d3a4b',
-                    marginBottom: 24,
-                    letterSpacing: 1
-                }}>
-                    Exercice 8 : Vérificateur Positif
-                </h2>
-                <form onSubmit={handleSubmit} style={{ marginBottom: 28 }}>
-                    <label style={{
-                        display: 'block',
-                        marginBottom: 16,
-                        color: '#4a5568',
-                        fontWeight: 500
-                    }}>
-                        Nombre :
-                        <input
-                            type="number"
-                            value={nombre}
-                            onChange={(e) => setNombre(e.target.value)}
-                            required
-                            style={{
-                                marginLeft: 10,
-                                padding: '8px 12px',
-                                borderRadius: 6,
-                                border: '1px solid #cbd5e1',
-                                fontSize: 16,
-                                width: 120,
-                                outline: 'none',
-                                transition: 'border 0.2s'
-                            }}
-                        />
-                    </label>
-                    <button
-                        type="submit"
-                        style={{
-                            background: 'linear-gradient(90deg, #667eea 0%, #5a67d8 100%)',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '10px 28px',
-                            fontSize: 16,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(90,103,216,0.08)',
-                            transition: 'background 0.2s'
-                        }}
-                    >
-                        Vérifier le signe
-                    </button>
-                </form>
-                {result && (
-                    <div style={{
-                        background: result === 'Positif' ? '#e6fffa' : '#fff5f5',
-                        border: `1.5px solid ${result === 'Positif' ? '#38b2ac' : '#f56565'}`,
-                        borderRadius: 8,
-                        padding: '14px 18px',
-                        marginBottom: 22,
-                        textAlign: 'center'
-                    }}>
-                        <h3 style={{
-                            color: '#2d3a4b',
-                            margin: 0,
-                            fontSize: 18,
-                            fontWeight: 600
-                        }}>Résultat :</h3>
-                        <p style={{
-                            color: result === 'Positif' ? '#319795' : '#e53e3e',
-                            fontSize: 20,
-                            fontWeight: 700,
-                            margin: '8px 0 0 0'
-                        }}>{result}</p>
-                    </div>
-                )}
-                <div style={{
-                    background: '#f7fafc',
-                    borderRadius: 8,
-                    padding: '14px 18px',
-                    marginBottom: 18,
-                    border: '1px solid #e2e8f0'
-                }}>
-                    <h3 style={{
-                        color: '#4a5568',
-                        fontSize: 16,
-                        margin: 0,
-                        fontWeight: 600
-                    }}>Infos Blockchain</h3>
-                    <p style={{ margin: '8px 0 0 0', fontSize: 15 }}>
-                        <span style={{ color: '#718096' }}>Compte connecté :</span> <span style={{ color: '#2d3a4b', fontWeight: 500 }}>{accounts[0]}</span>
-                    </p>
-                    <p style={{ margin: '2px 0 0 0', fontSize: 15 }}>
-                        <span style={{ color: '#718096' }}>Dernier bloc :</span> <span style={{ color: '#2d3a4b', fontWeight: 500 }}>{latestBlock}</span>
-                    </p>
-                </div>
-                {txHash && (
-                    <div style={{
-                        background: '#f7fafc',
-                        borderRadius: 8,
-                        padding: '14px 18px',
-                        marginBottom: 18,
-                        border: '1px solid #e2e8f0'
-                    }}>
-                        <h3 style={{
-                            color: '#4a5568',
-                            fontSize: 16,
-                            margin: 0,
-                            fontWeight: 600
-                        }}>Détails de la dernière transaction</h3>
-                        <p style={{ margin: '8px 0 0 0', fontSize: 15 }}>
-                            <span style={{ color: '#718096' }}>Transaction Hash :</span> <span style={{ color: '#2d3a4b', fontWeight: 500 }}>{txHash}</span>
-                        </p>
-                        <p style={{ margin: '2px 0 0 0', fontSize: 15 }}>
-                            <span style={{ color: '#718096' }}>Gas utilisé :</span> <span style={{ color: '#2d3a4b', fontWeight: 500 }}>{gasUsed}</span>
-                        </p>
-                    </div>
-                )}
-                <div style={{ textAlign: 'center', marginTop: 18 }}>
-                    <Link
-                        to="/"
-                        style={{
-                            color: '#5a67d8',
-                            textDecoration: 'none',
-                            fontWeight: 600,
-                            fontSize: 15,
-                            transition: 'color 0.2s'
-                        }}
-                    >
-                        ← Retour au sommaire
-                    </Link>
-                </div>
-            </div>
+        setWeb3(web3Instance);
+        setAccounts(accountsList);
+
+        const networkId = await web3Instance.eth.net.getId();
+        const deployedNetwork = VerificateurPositifJSON.networks[networkId];
+
+        if (deployedNetwork) {
+          const instance = new web3Instance.eth.Contract(
+            VerificateurPositifJSON.abi,
+            deployedNetwork.address
+          );
+          setContract(instance);
+
+          const block = await web3Instance.eth.getBlock("latest");
+          setLatestBlock(block);
+        } else {
+          setError(
+            "Le contrat VerificateurPositif n'est pas déployé sur ce réseau."
+          );
+        }
+      } catch (err) {
+        setError("Erreur d'initialisation : " + err.message);
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!contract || !accounts.length) {
+      alert("Contrat ou comptes introuvables.");
+      return;
+    }
+    setError("");
+    try {
+      const receipt = await contract.methods
+        .estPositif(nombre)
+        .send({ from: accounts[0] });
+
+      const positiveResult = await contract.methods.estPositif(nombre).call();
+
+      setResult(positiveResult ? "Positif" : "Négatif");
+
+      const tx = await web3.eth.getTransaction(receipt.transactionHash);
+      const block = await web3.eth.getBlock(receipt.blockNumber);
+
+      setTransaction(tx);
+      setLatestBlock(block);
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors de la transaction : " + err.message);
+    }
+  };
+
+  const blockTimestamp = latestBlock?.timestamp
+    ? new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()
+    : "Non disponible";
+
+  if (loading) {
+    return <div style={styles.container}>⏳ Connexion à la blockchain...</div>;
+  }
+
+  if (error) {
+    return <div style={styles.container}>❌ {error}</div>;
+  }
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.heading}>Exercice 8 : Vérificateur Positif</div>
+
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <label style={styles.label}>
+          Nombre :
+          <input
+            type="number"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            style={styles.input}
+            placeholder="Entrez un nombre"
+          />
+        </label>
+        <button type="submit" style={styles.button}>
+          Vérifier le signe
+        </button>
+      </form>
+
+      {result && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Résultat :</div>
+          <div style={styles.info}>{result}</div>
         </div>
-    );
+      )}
+
+      {latestBlock && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Informations du bloc</div>
+          <p>
+            <strong>Numéro du bloc:</strong> {latestBlock.number}
+          </p>
+          <p>
+            <strong>Hash:</strong> {latestBlock.hash}
+          </p>
+          <p>
+            <strong>Timestamp:</strong> {blockTimestamp}
+          </p>
+          <p>
+            <strong>Parent Hash:</strong> {latestBlock.parentHash}
+          </p>
+          <p>
+            <strong>Nonce:</strong> {latestBlock.nonce}
+          </p>
+          <p>
+            <strong>Transaction Count:</strong> {latestBlock.transactions.length}
+          </p>
+          <p>
+            <strong>Miner:</strong> {latestBlock.miner}
+          </p>
+          <p>
+            <strong>Gas Limit:</strong> {latestBlock.gasLimit}
+          </p>
+          <p>
+            <strong>Gas Used:</strong> {latestBlock.gasUsed}
+          </p>
+          <p>
+            <strong>Size:</strong> {latestBlock.size}
+          </p>
+        </div>
+      )}
+
+      {transaction && (
+        <div style={styles.section}>
+          <div style={styles.sectionTitle}>Détails de la transaction</div>
+          <p>
+            <strong>Hash:</strong> {transaction.hash}
+          </p>
+          <p>
+            <strong>Bloc:</strong> {transaction.blockNumber}
+          </p>
+          <p>
+            <strong>Expéditeur:</strong> {transaction.from}
+          </p>
+          <p>
+            <strong>Destinataire:</strong> {transaction.to}
+          </p>
+          <p>
+            <strong>Montant:</strong>{" "}
+            {web3.utils.fromWei(transaction.value || "0", "ether")} ETH
+          </p>
+          <p>
+            <strong>Nonce:</strong> {transaction.nonce}
+          </p>
+          <p>
+            <strong>Gas utilisé:</strong> {transaction.gas}
+          </p>
+          <p>
+            <strong>Prix du Gas:</strong>{" "}
+            {web3.utils.fromWei(transaction.gasPrice, "gwei")} Gwei
+          </p>
+        </div>
+      )}
+
+      <Link to="/" style={styles.link}>
+        ← Retour au sommaire
+      </Link>
+    </div>
+  );
 }
 
 export default VerificateurPositifPage;

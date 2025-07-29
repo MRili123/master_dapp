@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useWeb3 } from "../useWeb3";
+import Web3 from "web3";
+import AdditionContractJSON from "../contracts/AdditionContract.json";
 
 const styles = {
   container: {
@@ -40,8 +41,7 @@ const styles = {
     transition: "border 0.2s",
   },
   button: {
-    background:
-      "linear-gradient(90deg,#3949ab 0,#1976d2 100%)",
+    background: "linear-gradient(90deg,#3949ab 0,#1976d2 100%)",
     color: "#fff",
     border: "none",
     borderRadius: "6px",
@@ -85,58 +85,92 @@ const styles = {
 };
 
 function AdditionPage() {
-  const {
-    web3,
-    currentAccount,
-    contracts,
-    loading,
-    error,
-  } = useWeb3();
-
+  const [web3, setWeb3] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [result, setResult] = useState("");
   const [latestBlock, setLatestBlock] = useState(null);
   const [transaction, setTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        let web3Instance;
+        let accountsList;
+        if (window.ethereum) {
+          web3Instance = new Web3(window.ethereum);
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          accountsList = await web3Instance.eth.getAccounts();
+        } else {
+          web3Instance = new Web3("http://localhost:7545");
+          accountsList = await web3Instance.eth.getAccounts();
+        }
+        setWeb3(web3Instance);
+        setAccounts(accountsList);
+        const networkId = await web3Instance.eth.net.getId();
+        const deployedNetwork = AdditionContractJSON.networks[networkId];
+        if (deployedNetwork) {
+          const contractInstance = new web3Instance.eth.Contract(
+            AdditionContractJSON.abi,
+            deployedNetwork.address
+          );
+          setContract(contractInstance);
+        } else {
+          setError("AdditionContract n'est pas déployé sur ce réseau.");
+        }
+      } catch (err) {
+        setError("Erreur lors de l'initialisation de Web3 ou du contrat.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!contracts.AdditionContract) {
-      alert("Le contrat AdditionContract n’est pas chargé.");
+    if (!contract || accounts.length === 0) {
+      alert("Le contrat AdditionContract n’est pas chargé ou aucun compte n'est connecté.");
       return;
     }
 
     try {
-      // Send transaction (change to your contract method if needed)
-      const receipt = await contracts.AdditionContract.methods
+      const receipt = await contract.methods
         .addition2(parseInt(a), parseInt(b))
-        .call({ from: currentAccount });
+        .send({ from: accounts[0] });
 
-      setResult("Transaction réussie !");
+      setResult("Transaction envoyée avec succès.");
+      const txDetails = await web3.eth.getTransaction(receipt.transactionHash);
+      setTransaction(txDetails);
 
-      // Fetch block info of the transaction block
       const block = await web3.eth.getBlock(receipt.blockNumber);
       setLatestBlock(block);
-
-      // Fetch transaction details
-      const tx = await web3.eth.getTransaction(receipt.transactionHash);
-      setTransaction({ ...tx, gasUsed: receipt.gasUsed, status: receipt.status });
-
     } catch (err) {
+      setError("Erreur lors de l’exécution: " + (err.message || err));
       console.error("Erreur lors de l’exécution:", err);
     }
   };
 
-  if (loading)
+  const blockTimestamp = latestBlock?.timestamp
+    ? new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()
+    : "Non disponible";
+
+  if (loading) {
     return <div style={styles.container}>⏳ Connexion à la blockchain...</div>;
-  if (error) return <div style={styles.container}>❌ Erreur : {error}</div>;
+  }
+
+  if (error) {
+    return <div style={styles.container}>❌ Erreur : {error}</div>;
+  }
 
   return (
     <div style={styles.container}>
-      <div style={styles.heading}>
-        Exercice 1 : Addition de deux variables
-      </div>
+      <div style={styles.heading}>Exercice 1 : Addition de deux variables</div>
 
       <form style={styles.form} onSubmit={handleSubmit}>
         <label style={styles.label}>
@@ -180,7 +214,7 @@ function AdditionPage() {
           <div style={styles.sectionTitle}>Informations du bloc</div>
           <p><strong>Numéro du bloc:</strong> {latestBlock.number}</p>
           <p><strong>Hash:</strong> {latestBlock.hash}</p>
-          <p><strong>Timestamp:</strong> {new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()}</p>
+          <p><strong>Timestamp:</strong> {blockTimestamp}</p>
           <p><strong>Parent Hash:</strong> {latestBlock.parentHash}</p>
           <p><strong>Nonce:</strong> {latestBlock.nonce}</p>
           <p><strong>Transaction Count:</strong> {latestBlock.transactions.length}</p>
@@ -200,13 +234,11 @@ function AdditionPage() {
           <p><strong>Hash:</strong> {transaction.hash}</p>
           <p><strong>Nonce:</strong> {transaction.nonce}</p>
           <p><strong>Montant:</strong> {web3.utils.fromWei(transaction.value, "ether")} ETH</p>
-          <p><strong>Frais de transaction (gas price):</strong> {web3.utils.fromWei(transaction.gasPrice, "gwei")} Gwei</p>
+          <p><strong>Gas Price:</strong> {web3.utils.fromWei(transaction.gasPrice, "gwei")} Gwei</p>
           <p><strong>Limite de gas:</strong> {transaction.gas}</p>
-          <p><strong>Gas utilisé:</strong> {transaction.gasUsed}</p>
-          <p><strong>Status:</strong> {transaction.status ? "Succès" : "Échec"}</p>
           <p><strong>Bloc:</strong> {transaction.blockNumber}</p>
-            <p><strong>Horodatage:</strong> {new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()}</p>
-              <p><strong>Fonction appelée:</strong> addition2</p>
+          <p><strong>Horodatage:</strong> {blockTimestamp}</p>
+          <p><strong>Fonction appelée:</strong> addition2</p>
           <p><strong>Nom du contrat:</strong> AdditionContract</p>
         </div>
       )}

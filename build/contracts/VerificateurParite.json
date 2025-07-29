@@ -1619,12 +1619,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x2AE415Ce32b1198E05B95d1825A029558C24139c",
-      "transactionHash": "0x0bc10f942df016e111f2a52c1e26828f3a0be2cd4cc9c7867dd24f910c7c91ea"
+      "address": "0x919507D77899E7F17dd2041A07baa1bb9f69605B",
+      "transactionHash": "0xc4e5f1b816dd47bd4b22006fedf57882336b77630e0517141706f8dbf57e128f"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-07-29T00:01:34.195Z",
+  "updatedAt": "2025-07-29T00:52:21.687Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

@@ -99,7 +99,7 @@
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\nabstract contract Forme {\r\n    uint public x;\r\n    uint public y;\r\n\r\n    constructor(uint _x, uint _y) {\r\n        x = _x;\r\n        y = _y;\r\n    }\r\n\r\n    function deplacerForme(uint dx, uint dy) public {\r\n        x += dx;\r\n        y += dy;\r\n    }\r\n\r\n    function afficheXY() public view returns (uint, uint) {\r\n        return (x, y);\r\n    }\r\n\r\n    function afficheInfos() public pure virtual returns (string memory);\r\n    function surface() public view virtual returns (uint);\r\n}\r\n\r\ncontract Rectangle is Forme {\r\n    uint public lo;\r\n    uint public la;\r\n\r\n    constructor(uint _x, uint _y, uint _lo, uint _la) Forme(_x, _y) {\r\n        lo = _lo;\r\n        la = _la;\r\n    }\r\n\r\n    function surface() public view override returns (uint) {\r\n        return lo * la;\r\n    }\r\n\r\n    function afficheInfos() public pure override returns (string memory) {\r\n        return \"Je suis Rectangle\";\r\n    }\r\n\r\n    function afficheLoLa() public view returns (uint, uint) {\r\n        return (lo, la);\r\n    }\r\n}",
-  "sourcePath": "C:\\Users\\xd-11\\Documents\\GitHub\\PFE_DAPP\\contracts\\Rectangle.sol",
+  "sourcePath": "C:\\Users\\ilias\\OneDrive\\Bureau\\contract_test\\contracts\\Rectangle.sol",
   "ast": {
     "absolutePath": "project:/contracts/Rectangle.sol",
     "exportedSymbols": {
@@ -1515,7 +1515,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-07-29T00:01:30.214Z",
+  "updatedAt": "2025-07-29T00:52:19.667Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

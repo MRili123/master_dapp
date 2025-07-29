@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useWeb3 } from "../useWeb3";
+
+import Web3 from "web3";
+import AdditionContractJSON from "../contracts/AdditionContract.json";
 
 const styles = {
   container: {
@@ -84,46 +86,73 @@ const styles = {
   },
 };
 
-function AdditionPage() {
-  const {
-    web3,
-    currentAccount,
-    contracts,
-    loading,
-    error,
-  } = useWeb3();
 
+function AdditionPage() {
+  const [web3, setWeb3] = useState(null);
+  const [contract, setContract] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [a, setA] = useState("");
   const [b, setB] = useState("");
   const [result, setResult] = useState("");
   const [latestBlock, setLatestBlock] = useState(null);
   const [transaction, setTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        let web3Instance;
+        let accountsList;
+        if (window.ethereum) {
+          web3Instance = new Web3(window.ethereum);
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+          accountsList = await web3Instance.eth.getAccounts();
+        } else {
+          web3Instance = new Web3("http://localhost:7545");
+          accountsList = await web3Instance.eth.getAccounts();
+        }
+        setWeb3(web3Instance);
+        setAccounts(accountsList);
+        const networkId = await web3Instance.eth.net.getId();
+        const deployedNetwork = AdditionContractJSON.networks[networkId];
+        if (deployedNetwork) {
+          const contractInstance = new web3Instance.eth.Contract(
+            AdditionContractJSON.abi,
+            deployedNetwork.address
+          );
+          setContract(contractInstance);
+        } else {
+          setError("AdditionContract n'est pas déployé sur ce réseau.");
+        }
+      } catch (err) {
+        setError("Erreur lors de l'initialisation de Web3 ou du contrat.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!contracts.AdditionContract) {
-      alert("Le contrat AdditionContract n’est pas chargé.");
+    if (!contract || accounts.length === 0) {
+      alert("Le contrat AdditionContract n’est pas chargé ou aucun compte n'est connecté.");
       return;
     }
-
     try {
-      // Send transaction (change to your contract method if needed)
-      const receipt = await contracts.AdditionContract.methods
+      const receipt = await contract.methods
         .addition2(parseInt(a), parseInt(b))
-        .call({ from: currentAccount });
-
-      setResult("Transaction réussie !");
-
-      // Fetch block info of the transaction block
-      const block = await web3.eth.getBlock(receipt.blockNumber);
+        .call({ from: accounts[0] });
+      setResult(receipt);
+      // Optionally, fetch latest block info
+      const block = await web3.eth.getBlock("latest");
       setLatestBlock(block);
-
-      // Fetch transaction details
-      const tx = await web3.eth.getTransaction(receipt.transactionHash);
-      setTransaction({ ...tx, gasUsed: receipt.gasUsed, status: receipt.status });
-
+      // Optionally, fetch transaction details (not available for .call, only for .send)
+      setTransaction(null);
     } catch (err) {
+      setError("Erreur lors de l’exécution: " + (err.message || err));
       console.error("Erreur lors de l’exécution:", err);
     }
   };

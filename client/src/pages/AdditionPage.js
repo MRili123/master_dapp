@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useWeb3 } from "../hook/useWeb3";
+import { useWeb3 } from "../useWeb3";
 
 const styles = {
   container: {
@@ -109,9 +109,9 @@ function AdditionPage() {
 
     try {
       // Send transaction (change to your contract method if needed)
-      const receipt = await contracts.AdditionContract.contract.methods
+      const receipt = await contracts.AdditionContract.methods
         .addition2(parseInt(a), parseInt(b))
-        .send({ from: currentAccount });
+        .call({ from: currentAccount });
 
       setResult("Transaction réussie !");
 
@@ -125,7 +125,6 @@ function AdditionPage() {
 
     } catch (err) {
       console.error("Erreur lors de l’exécution:", err);
-      alert("Erreur: " + (err.message || err));
     }
   };
 
@@ -181,7 +180,7 @@ function AdditionPage() {
           <div style={styles.sectionTitle}>Informations du bloc</div>
           <p><strong>Numéro du bloc:</strong> {latestBlock.number}</p>
           <p><strong>Hash:</strong> {latestBlock.hash}</p>
-          <p><strong>Timestamp:</strong> {new Date(latestBlock.timestamp * 1000).toLocaleString()}</p>
+          <p><strong>Timestamp:</strong> {new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()}</p>
           <p><strong>Parent Hash:</strong> {latestBlock.parentHash}</p>
           <p><strong>Nonce:</strong> {latestBlock.nonce}</p>
           <p><strong>Transaction Count:</strong> {latestBlock.transactions.length}</p>
@@ -206,8 +205,8 @@ function AdditionPage() {
           <p><strong>Gas utilisé:</strong> {transaction.gasUsed}</p>
           <p><strong>Status:</strong> {transaction.status ? "Succès" : "Échec"}</p>
           <p><strong>Bloc:</strong> {transaction.blockNumber}</p>
-          <p><strong>Horodatage:</strong> {new Date(latestBlock.timestamp * 1000).toLocaleString()}</p>
-          <p><strong>Fonction appelée:</strong> addition2</p>
+            <p><strong>Horodatage:</strong> {new Date(Number(latestBlock.timestamp) * 1000).toLocaleString()}</p>
+              <p><strong>Fonction appelée:</strong> addition2</p>
           <p><strong>Nom du contrat:</strong> AdditionContract</p>
         </div>
       )}

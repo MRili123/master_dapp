@@ -7,8 +7,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "copy-contracts": "node copyScript.js",
-     "migrate": "truffle migrate --network development && npm run copy-contracts"
+    "copy": "node copy.js",
+    "migrate": "truffle migrate --network development"
   },
   "keywords": [],
   "author": "",

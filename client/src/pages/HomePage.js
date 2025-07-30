@@ -58,26 +58,27 @@ function HomePage() {
                                 Exercice 4 : Utilisation des variables globales
                             </Link>
                         </li>
-                        <li>
-                            <Link to="/verificateur-parite" style={linkStyle}>
-                                Exercice 5 : Tester la parité
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/verificateur-positif" style={linkStyle}>
-                                Exercice 6 : Tester le signe
-                            </Link>
-                        </li>
-                        <li>
+                         <li>
                             <Link to="/somme-tableau" style={linkStyle}>
-                                Exercice 7 : Gestion des tableaux
+                                Exercice 6 : Gestion des tableaux
                             </Link>
                         </li>
                         <li>
                             <Link to="/rectangle" style={linkStyle}>
-                                Exercice 8 : POO - Formes géométriques
+                                Exercice 5 : POO - Formes géométriques
                             </Link>
                         </li>
+                        <li>
+                            <Link to="/verificateur-parite" style={linkStyle}>
+                                Exercice 7 : Tester la parité
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/verificateur-positif" style={linkStyle}>
+                                Exercice 8 : Tester le signe
+                            </Link>
+                        </li>
+                       
                     </ul>
                 </nav>
             </div>
